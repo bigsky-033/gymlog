@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ExerciseTracker",
-    "slug": "ExerciseTracker",
+    "name": "GymLog",
+    "slug": "gymlog",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
