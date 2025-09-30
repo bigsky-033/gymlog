@@ -32,6 +32,27 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+.env.local
+.env.development
+.env.production
+
+# Sensitive files
+*.pem
+*.key
+*.p12
+*.p8
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
 # typescript
 *.tsbuildinfo
