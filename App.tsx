@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Button, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
 import { testDatabase, cleanupTestData } from './src/database/testDatabase';
+import { testServices } from './src/services/testServices';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
@@ -36,6 +37,24 @@ export default function App() {
 
     try {
       await testDatabase();
+      const output = restoreConsole();
+      setTestOutput(output);
+      setTestStatus('success');
+    } catch (error) {
+      const output = restoreConsole();
+      setTestOutput(output + '\n\nError: ' + (error instanceof Error ? error.message : String(error)));
+      setTestStatus('error');
+    }
+  };
+
+  const runServiceTests = async () => {
+    setTestStatus('running');
+    setTestOutput('');
+
+    const restoreConsole = captureConsole();
+
+    try {
+      await testServices();
       const output = restoreConsole();
       setTestOutput(output);
       setTestStatus('success');
@@ -96,23 +115,31 @@ export default function App() {
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Run Tests"
+          title="DB Tests"
           onPress={runTest}
           disabled={testStatus === 'running'}
+        />
+        <Button
+          title="Service Tests"
+          onPress={runServiceTests}
+          disabled={testStatus === 'running'}
+          color="#9C27B0"
         />
         <Button
           title="Export DB"
           onPress={exportDatabase}
           color="#4CAF50"
         />
-        {testStatus === 'success' && (
+      </View>
+      {testStatus === 'success' && (
+        <View style={styles.buttonContainer}>
           <Button
             title="Cleanup"
             onPress={cleanup}
             color="#FF6B6B"
           />
-        )}
-      </View>
+        </View>
+      )}
 
       {testStatus === 'running' && (
         <View style={styles.loadingContainer}>
