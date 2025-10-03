@@ -1,7 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, Button, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
 import { testDatabase, cleanupTestData } from './src/database/testDatabase';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 
 export default function App() {
   const [testStatus, setTestStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
@@ -53,19 +55,59 @@ export default function App() {
     }
   };
 
+  const exportDatabase = async () => {
+    try {
+      // Database file path in expo-sqlite
+      const dbPath = `${FileSystem.documentDirectory}SQLite/exercise_tracker.db`;
+
+      // Check if database file exists
+      const fileInfo = await FileSystem.getInfoAsync(dbPath);
+
+      if (!fileInfo.exists) {
+        Alert.alert('Error', `Database file not found at: ${dbPath}`);
+        return;
+      }
+
+      // Copy to a shareable location
+      const exportPath = `${FileSystem.cacheDirectory}exercise_tracker.db`;
+      await FileSystem.copyAsync({
+        from: dbPath,
+        to: exportPath
+      });
+
+      // Share the file
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(exportPath, {
+          mimeType: 'application/x-sqlite3',
+          dialogTitle: 'Export Database'
+        });
+        Alert.alert('Success', 'Database exported successfully!');
+      } else {
+        Alert.alert('Info', `Database saved to: ${exportPath}`);
+      }
+    } catch (error) {
+      Alert.alert('Export Failed', error instanceof Error ? error.message : String(error));
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🧪 Database Test Suite</Text>
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Run Database Tests"
+          title="Run Tests"
           onPress={runTest}
           disabled={testStatus === 'running'}
         />
+        <Button
+          title="Export DB"
+          onPress={exportDatabase}
+          color="#4CAF50"
+        />
         {testStatus === 'success' && (
           <Button
-            title="Cleanup Test Data"
+            title="Cleanup"
             onPress={cleanup}
             color="#FF6B6B"
           />

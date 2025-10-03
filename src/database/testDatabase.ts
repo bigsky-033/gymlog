@@ -78,15 +78,29 @@ export async function testDatabase(): Promise<void> {
     );
     console.log(`✅ Tag "Legs" linked to "Squat"\n`);
 
-    // Step 4: Create workout session for today
+    // Step 4: Create workout session for today (or use existing)
     console.log('📝 Step 4: Creating workout session for today...');
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    const sessionResult = await db.executeRun(
-      'INSERT INTO workout_sessions (date, time_of_day, notes) VALUES (?, ?, ?)',
-      [today, 'morning', 'Test workout session']
+
+    // Check if session already exists for today
+    let existingSession = await db.getFirst<WorkoutSessionDB>(
+      'SELECT * FROM workout_sessions WHERE date = ? AND time_of_day = ?',
+      [today, 'morning']
     );
-    const sessionId = sessionResult.lastInsertRowId!;
-    console.log(`✅ Workout session created with ID: ${sessionId} for date: ${today}\n`);
+
+    let sessionId: number;
+    if (existingSession) {
+      sessionId = existingSession.id;
+      console.log(`   Session already exists with ID: ${sessionId} for ${today}`);
+    } else {
+      const sessionResult = await db.executeRun(
+        'INSERT INTO workout_sessions (date, time_of_day, notes) VALUES (?, ?, ?)',
+        [today, 'morning', 'Test workout session']
+      );
+      sessionId = sessionResult.lastInsertRowId!;
+      console.log(`   Session created with ID: ${sessionId} for ${today}`);
+    }
+    console.log(`✅ Workout session ready (ID: ${sessionId})\n`);
 
     // Step 5: Add 3 sets (1 warmup, 2 working sets)
     console.log('📝 Step 5: Adding 3 sets...');
